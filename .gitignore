@@ -32,6 +32,17 @@ MANIFEST
 *.manifest
 *.spec
 
+backend/cart-service/node_modules/*
+backend/cart-service/package-lock.json
+backend/order-service/node_modules/*
+backend/order-service/package-lock.json
+backend/product-service/node_modules/*
+backend/product-service/package-lock.json
+backend/user-service/node_modules/*
+backend/user-service/package-lock.json
+frontend/node_modules/*
+frontend/package-lock.json
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt

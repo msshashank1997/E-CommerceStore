@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_USER_SERVICE_URL=http://localhost:3001
+      - REACT_APP_PRODUCT_SERVICE_URL=http://localhost:3002
+      - REACT_APP_CART_SERVICE_URL=http://localhost:3003
+      - REACT_APP_ORDER_SERVICE_URL=http://localhost:3004
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MONGODB_URI=mongodb://localhost:27017/ecommerce_users
+      - JWT_SECRET=your-jwt-secret-key
+  product-service:
+    build:
+      context: ./backend/product-service
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - MONGODB_URI=mongodb://localhost:27017/ecommerce_products
+  cart-service:
+    build:
+      context: ./backend/cart-service
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - MONGODB_URI=mongodb://localhost:27017/ecommerce_carts
+      - PRODUCT_SERVICE_URL=http://localhost:3002
+  order-service:
+    build:
+      context: ./backend/order-service
+      dockerfile: Dockerfile
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - MONGODB_URI=mongodb://localhost:27017/ecommerce_orders
+      - CART_SERVICE_URL=http://localhost:3003
+      - PRODUCT_SERVICE_URL=http://localhost:3002
+      - USER_SERVICE_URL=http://localhost:3001
