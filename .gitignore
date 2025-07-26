@@ -43,6 +43,10 @@ backend/user-service/package-lock.json
 frontend/node_modules/*
 frontend/package-lock.json
 
+terraform/.terraform/*
+terraform.tfstate
+terraform.tfstate.backup
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt

@@ -1,0 +1,9 @@
+aws_region = "your-preferred-region"
+ami = "ami-xxxxxxxxxxxxxxxxx"
+key_name = "your-key-pair-name"
+instance_type = "t2.micro"
+subnet_id = "subnet-xxxxxxxxxxxxxxxxx"
+vpc_security_group_ids = ["sg-xxxxxxxxxxxxxxxxx"]
+volume_size = 20   
+volume_type = "gp2"
+environment = "dev"

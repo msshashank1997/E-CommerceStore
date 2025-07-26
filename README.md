@@ -289,6 +289,17 @@ curl http://localhost:3002/api/categories
 
 ## 🚀 Deployment
 
+### Local Development
+Follow the [Getting Started](#-getting-started) section above for local development setup.
+
+### Production Deployment Options
+
+#### 1. Docker Deployment
+See the [Docker Deployment](#-docker-deployment) section for containerized deployment.
+
+#### 2. Cloud Infrastructure with Terraform
+See the [Terraform Infrastructure Deployment](#️-terraform-infrastructure-deployment) section for AWS cloud deployment.
+
 ### Production Considerations
 
 1. **Environment Variables**: Use proper environment variable management
@@ -297,21 +308,8 @@ curl http://localhost:3002/api/categories
 4. **Load Balancing**: Implement load balancing for high availability
 5. **Monitoring**: Add logging and monitoring solutions
 6. **Security**: Implement rate limiting, CORS, and other security measures
-
-### Docker Deployment (Future Enhancement)
-
-Each service can be containerized with Docker:
-
-```dockerfile
-# Example Dockerfile for a service
-FROM node:16-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --production
-COPY . .
-EXPOSE 3001
-CMD ["npm", "start"]
-```
+7. **SSL/TLS**: Configure HTTPS for secure communication
+8. **Backup**: Implement database backup and recovery strategies
 
 ## 🤝 Contributing
 
@@ -334,10 +332,242 @@ For support and questions:
 - Verify database connections
 - Check environment variables
 
+## � Docker Deployment
+
+### Available Docker Images
+
+The application is containerized and available on Docker Hub. Replace `your-dockerhub-username` with your actual Docker Hub username:
+
+```bash
+# Frontend
+docker pull your-dockerhub-username/frontend:latest
+
+# Backend Services
+docker pull your-dockerhub-username/user-service:latest
+docker pull your-dockerhub-username/product-service:latest
+docker pull your-dockerhub-username/cart-service:latest
+docker pull your-dockerhub-username/e-commercestore-order-service:latest
+```
+
+### Building and Pushing Docker Images
+
+1. **Update Docker Hub Username**: Replace `your-dockerhub-username` with your actual username in all commands below.
+
+2. **Login to Docker Hub**:
+```bash
+docker login
+```
+
+3. **Build and Push Images**:
+
+```bash
+# Build and push frontend
+docker build -t your-dockerhub-username/frontend:latest ./frontend
+docker push your-dockerhub-username/frontend:latest
+
+# Build and push user service
+docker build -t your-dockerhub-username/user-service:latest ./backend/user-service
+docker push your-dockerhub-username/user-service:latest
+
+# Build and push product service
+docker build -t your-dockerhub-username/product-service:latest ./backend/product-service
+docker push your-dockerhub-username/product-service:latest
+
+# Build and push cart service
+docker build -t your-dockerhub-username/cart-service:latest ./backend/cart-service
+docker push your-dockerhub-username/cart-service:latest
+
+# Build and push order service
+docker build -t your-dockerhub-username/e-commercestore-order-service:latest ./backend/order-service
+docker push your-dockerhub-username/e-commercestore-order-service:latest
+```
+
+### Running with Docker Compose
+
+1. **Create docker-compose.yml**:
+```yaml
+version: '3.8'
+services:
+  frontend:
+    image: your-dockerhub-username/frontend:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_USER_SERVICE_URL=http://localhost:3001
+      - REACT_APP_PRODUCT_SERVICE_URL=http://localhost:3002
+      - REACT_APP_CART_SERVICE_URL=http://localhost:3003
+      - REACT_APP_ORDER_SERVICE_URL=http://localhost:3004
+    depends_on:
+      - user-service
+      - product-service
+      - cart-service
+      - order-service
+
+  user-service:
+    image: your-dockerhub-username/user-service:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongo:27017/ecommerce_users
+      - JWT_SECRET=your-jwt-secret-key
+    depends_on:
+      - mongo
+
+  product-service:
+    image: your-dockerhub-username/product-service:latest
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - MONGODB_URI=mongodb://mongo:27017/ecommerce_products
+    depends_on:
+      - mongo
+
+  cart-service:
+    image: your-dockerhub-username/cart-service:latest
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - MONGODB_URI=mongodb://mongo:27017/ecommerce_carts
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+    depends_on:
+      - mongo
+      - product-service
+
+  order-service:
+    image: your-dockerhub-username/e-commercestore-order-service:latest
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - MONGODB_URI=mongodb://mongo:27017/ecommerce_orders
+      - CART_SERVICE_URL=http://cart-service:3003
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+      - USER_SERVICE_URL=http://user-service:3001
+    depends_on:
+      - mongo
+      - cart-service
+      - product-service
+      - user-service
+
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+
+volumes:
+  mongo_data:
+```
+
+2. **Run the application**:
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes
+docker-compose down -v
+```
+
+## 🏗️ Terraform Infrastructure Deployment
+
+Deploy the application infrastructure to AWS using Terraform.
+
+### Prerequisites
+- AWS CLI configured with appropriate credentials
+- Terraform installed (v1.0+)
+- Docker images pushed to Docker Hub
+
+### Terraform Commands
+
+1. **Navigate to Terraform directory**:
+```bash
+cd terraform
+```
+
+2. **Initialize Terraform**:
+```bash
+terraform init
+```
+
+3. **Plan the deployment**:
+```bash
+terraform plan -var="dockerhub_username=your-dockerhub-username"
+```
+
+4. **Apply the infrastructure**:
+```bash
+terraform apply -var="dockerhub_username=your-dockerhub-username"
+```
+
+5. **View outputs**:
+```bash
+terraform output
+```
+
+6. **Destroy infrastructure** (when no longer needed):
+```bash
+terraform destroy -var="dockerhub_username=your-dockerhub-username"
+```
+
+### Terraform Variables
+
+Create a `terraform.tfvars` file in the terraform directory:
+
+```hcl
+# terraform.tfvars
+dockerhub_username = "your-dockerhub-username"
+aws_region = "your-preferred-region"
+environment = "production"
+instance_type = "t3.medium"
+key_name = "your-aws-key-pair"
+
+# Database configuration
+db_instance_class = "db.t3.micro"
+db_allocated_storage = 20
+db_username = "admin"
+db_password = "your-secure-database-password"
+```
+
+### Infrastructure Components
+
+The Terraform configuration deploys:
+
+- **EC2 Instances**: For running Docker containers
+- **RDS MongoDB**: Managed database service
+- **VPC & Subnets**: Network infrastructure
+- **Security Groups**: Firewall rules
+- **Load Balancer**: Application load balancer
+- **Auto Scaling**: Auto scaling groups for high availability
+
+### Accessing the Deployed Application
+
+After successful deployment, Terraform will output:
+- **Load Balancer URL**: Access point for the application
+- **Database Endpoint**: MongoDB connection string
+- **EC2 Instance IPs**: For direct access if needed
+
+```bash
+# Example outputs
+terraform output lb_dns_name
+terraform output database_endpoint
+```
+
 ## 🔮 Future Enhancements
 
 - **API Gateway**: Centralized request routing and authentication
-- **Docker Containerization**: Full containerization with docker-compose
 - **Message Queues**: Async communication between services
 - **Caching**: Redis caching for improved performance
 - **Search Engine**: Elasticsearch for advanced product search
@@ -346,3 +576,214 @@ For support and questions:
 - **Admin Dashboard**: Administrative interface
 - **Analytics**: Order and user analytics
 - **Payment Integration**: Real payment gateway integration
+- **Kubernetes Deployment**: Container orchestration with K8s
+- **CI/CD Pipeline**: Automated deployment pipeline
+- **Monitoring & Logging**: Application monitoring and centralized logging
+
+## 📚 Additional Resources
+
+### Useful Commands
+
+**Note:** Replace `your-dockerhub-username` with your actual Docker Hub username in all commands below.
+
+docker login
+
+```bash
+# Build and push all Docker images to Docker Hub
+docker build -t your-dockerhub-username/user-service:latest ./backend/user-service
+docker push your-dockerhub-username/user-service:latest
+
+docker build -t your-dockerhub-username/product-service:latest ./backend/product-service
+docker push your-dockerhub-username/product-service:latest
+
+docker build -t your-dockerhub-username/cart-service:latest ./backend/cart-service
+docker push your-dockerhub-username/cart-service:latest
+
+docker build -t your-dockerhub-username/e-commercestore-order-service:latest ./backend/order-service
+docker push your-dockerhub-username/e-commercestore-order-service:latest
+
+docker build -t your-dockerhub-username/frontend:latest ./frontend
+docker push your-dockerhub-username/frontend:latest
+
+# Verify Docker images
+docker images | findstr your-dockerhub-username
+
+# Verify repositories on Docker Hub
+docker pull your-dockerhub-username/user-service:latest
+docker pull your-dockerhub-username/product-service:latest
+docker pull your-dockerhub-username/cart-service:latest
+docker pull your-dockerhub-username/e-commercestore-order-service:latest
+docker pull your-dockerhub-username/frontend:latest
+```
+
+### Repository Setup Instructions
+
+1. **Create Docker Hub Account**: Sign up at [hub.docker.com](https://hub.docker.com) if you don't have an account
+2. **Replace Username**: Update `your-dockerhub-username` with your actual Docker Hub username in all commands
+3. **Login to Docker Hub**: Run `docker login` before pushing images
+
+### Example with Sample Username
+If your Docker Hub username is `johndoe`, the commands would look like:
+```bash
+docker build -t johndoe/user-service:latest ./backend/user-service
+docker push johndoe/user-service:latest
+# ... and so on for other services
+```
+
+### Quick Deployment Commands
+
+**Note:** Replace `your-dockerhub-username` with your actual Docker Hub username.
+
+```bash
+# For local testing with Docker Compose
+docker-compose up -d
+
+# For individual service testing
+docker run -d -p 3001:3001 --name user-service your-dockerhub-username/user-service:latest
+docker run -d -p 3002:3002 --name product-service your-dockerhub-username/product-service:latest
+docker run -d -p 3003:3003 --name cart-service your-dockerhub-username/cart-service:latest
+docker run -d -p 3004:3004 --name order-service your-dockerhub-username/e-commercestore-order-service:latest
+docker run -d -p 3000:3000 --name frontend your-dockerhub-username/frontend:latest
+```
+
+## 🚀 AWS Infrastructure Deployment with Terraform
+
+### Prerequisites
+- AWS CLI configured with valid credentials
+- Terraform installed
+- Valid AWS account with appropriate permissions
+
+### Terraform Configuration
+The project includes Terraform configuration files in the `/terraform` directory:
+- `main.tf` - Infrastructure resources
+- `variables.tf` - Variable definitions
+- `terraform.tfvars` - Variable values
+- `outputs.tf` - Output definitions
+- `provider.tf` - AWS provider configuration
+
+### ⚠️ Important: Update terraform.tfvars
+Before running Terraform, you **must** update the `terraform/terraform.tfvars` file with your actual AWS resource values:
+
+```hcl
+# terraform/terraform.tfvars
+aws_region = "your-preferred-region"          # e.g., "us-east-1", "eu-west-1", "ap-south-1"
+ami = "ami-xxxxxxxxxxxxxxxxx"                 # Find AMI ID for your region
+key_name = "your-key-pair-name"               # Your AWS EC2 Key Pair name
+instance_type = "t2.micro"                    # Keep as is for free tier
+subnet_id = "subnet-xxxxxxxxxxxxxxxxx"       # Your VPC subnet ID
+vpc_security_group_ids = ["sg-xxxxxxxxxxxxxxxxx"]  # Your security group ID
+volume_size = 20                              # Keep as is
+volume_type = "gp2"                           # Keep as is
+environment = "dev"                           # Keep as is or change to "prod"
+```
+
+#### How to find your AWS resource values:
+```bash
+# Find your default VPC and subnets
+aws ec2 describe-vpcs --filters "Name=is-default,Values=true"
+aws ec2 describe-subnets --filters "Name=vpc-id,Values=YOUR_VPC_ID"
+
+# Find security groups
+aws ec2 describe-security-groups --filters "Name=group-name,Values=default"
+
+# Find AMI ID for your region (Ubuntu 20.04 LTS)
+aws ec2 describe-images --owners 099720109477 --filters "Name=name,Values=ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*" --query 'Images[*].[ImageId,Name]' --output table
+```
+
+### Deployment Commands
+
+#### 1. AWS CLI Configuration
+```bash
+# Configure AWS credentials
+aws configure set aws_access_key_id YOUR_ACCESS_KEY_ID
+aws configure set aws_secret_access_key YOUR_SECRET_ACCESS_KEY
+aws configure set default.region YOUR_PREFERRED_REGION
+
+# Verify authentication
+aws sts get-caller-identity
+```
+
+#### 2. Terraform Deployment
+```bash
+# Navigate to terraform directory
+cd terraform
+
+# IMPORTANT: Update terraform.tfvars with your AWS resource values first!
+# Edit terraform.tfvars and replace placeholder values with actual ones
+
+# Initialize Terraform
+terraform init
+
+# Plan the deployment (review changes before applying)
+terraform plan
+
+# Apply the configuration
+terraform apply -auto-approve
+```
+
+### 🎉 Deployment Success!
+
+The Terraform deployment successfully created:
+
+#### ✅ Infrastructure Resources:
+1. **Security Group** (`frontend-sg`): `sg-xxxxxxxxxxxxxxxxx`
+   - Allows HTTP access on port 3000
+   - Allows all outbound traffic
+
+2. **EC2 Instance** (`example_ec2`): `i-xxxxxxxxxxxxxxxxx`
+   - Instance type: t2.micro
+   - 20GB gp2 EBS volume
+
+3. **Ubuntu Docker Instance** (`ubuntu-docker-instance`): `i-xxxxxxxxxxxxxxxxx`
+   - Instance type: t2.micro
+   - Auto-configured with Docker and E-commerce microservices
+
+#### 🌐 Application Access:
+- **Frontend URL**: http://XX.XXX.XX.X:3000
+- **User Service**: http://XX.XXX.XX.X:3001
+- **Product Service**: http://XX.XXX.XX.X:3002
+- **Cart Service**: http://XX.XXX.XX.X:3003
+- **Order Service**: http://XX.XXX.XX.X:3004
+
+### Verification Commands
+
+```bash
+# Check instance status
+aws ec2 describe-instances --instance-ids i-xxxxxxxxxxxxxxxxx --query 'Reservations[*].Instances[*].[InstanceId,State.Name,PublicIpAddress]' --output table
+
+# Test application connectivity
+curl -I http://XX.XXX.XX.X:3000
+
+# PowerShell alternative
+Test-NetConnection -ComputerName XX.XXX.XX.X -Port 3000
+```
+
+### User Data Script Verification
+
+The user data script automatically:
+- ✅ Updates the system packages
+- ✅ Installs Docker
+- ✅ Starts and enables Docker service
+- ✅ Pulls all microservice Docker images
+- ✅ Runs all containers on their respective ports
+
+To verify user data execution (if you have SSH access):
+```bash
+# Check user data logs
+sudo cat /var/log/cloud-init-output.log
+
+# Check running containers
+sudo docker ps
+
+# Check port status
+sudo netstat -tlnp | grep -E ":(3000|3001|3002|3003|3004)"
+```
+
+![alt text](image.png)
+
+### Cleanup
+
+To destroy the infrastructure:
+```bash
+terraform destroy -auto-approve
+```
